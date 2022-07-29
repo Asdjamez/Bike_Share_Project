@@ -1,0 +1,330 @@
+#Capston_Case_Study_Cyclistic_Bike_Share
+
+#Install_Packages
+install.packages("tidyverse")
+
+#load_libraries 
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(readr)
+library(hms)
+library(lubridate) 
+
+#load_original_files_from_July_2021_to_June_2022
+
+Jul_2021 <- read_csv("Project/202107-tripdata.csv")
+Aug_2021 <- read_csv("Project/202108-tripdata.csv")
+Sep_2021 <- read_csv("Project/202109-tripdata.csv")
+Oct_2021 <- read_csv("Project/202110-tripdata.csv")
+Nov_2021 <- read_csv("Project/202111-tripdata.csv")
+Dec_2021 <- read_csv("Project/202112-tripdata.csv")
+Jan_2022 <- read_csv("Project/202201-tripdata.csv")
+Feb_2022 <- read_csv("Project/202202-tripdata.csv")
+Mar_2022 <- read_csv("Project/202203-tripdata.csv")
+Apr_2022 <- read_csv("Project/202204-tripdata.csv")
+May_2022 <- read_csv("Project/202205-tripdata.csv")
+Jun_2022 <- read_csv("Project/202206-tripdata.csv")
+
+#Check column names for consistency
+
+colnames(Jul_2021)
+colnames(Aug_2021)
+colnames(Sep_2021)
+colnames(Oct_2021)
+colnames(Nov_2021)
+colnames(Dec_2021)
+colnames(Jan_2022)
+colnames(Feb_2022)
+colnames(Mar_2022)
+colnames(May_2022)
+colnames(Jun_2022)
+
+#Merge_all_data_into_one
+
+New_df <- bind_rows(Jul_2021, Aug_2021, Sep_2021, Oct_2021, Nov_2021, Dec_2021, Jan_2022, Feb_2022, Mar_2022,Apr_2022, May_2022, Jun_2022)
+
+#Remove individual files to release memory
+
+remove(Jul_2021, Aug_2021, Sep_2021, Oct_2021, Nov_2021, Dec_2021, Jan_2022, Feb_2022, Mar_2022,Apr_2022, May_2022, Jun_2022)
+
+#Inspect dataset to make sure consistency
+str(New_df)
+
+
+###cleaning of data####
+
+#Remove columns which aren't needed
+
+New_df <- New_df %>% 
+  select(-c(ride_id, start_station_id, end_station_id, start_lat, start_lng, end_lat, end_lng))
+
+#Inspect dataset
+glimpse(New_df)
+#or
+str(New_df)
+#or
+head(New_df)
+#or
+colnames(New_df)
+
+#To Check if any discrepancy in member types
+table(New_df$member_casual)
+
+#Add columns that list the date, month, day, and year of each ride
+
+New_df$date <- as.Date(New_df$started_at) #The default format is yyyy-mm-dd
+New_df$month <- format(as.Date(New_df$date), "%m")
+New_df$day <- format(as.Date(New_df$date), "%d")
+New_df$year <- format(as.Date(New_df$date), "%Y")
+New_df$day_of_week <- format(as.Date(New_df$date), "%A")
+New_df$time <- format(as.Date(New_df$date), "%H:%M:%S") #format time as HH:MM:SS
+New_df$time <- as_hms((New_df$started_at)) #create new column for time
+New_df$hour <- hour(New_df$time) #create new column for hour
+
+#Add a “ride_length” calculation to New_df (in Minutes)
+New_df$ride_length <- difftime(New_df$ended_at,New_df$started_at, units = "mins")
+
+#Inspect the structure of the columns
+str(New_df)
+#Convert “ride_length” from to numeric so we can run calculations on the data
+New_df$ride_length <- as.numeric(as.character(New_df$ride_length))
+
+#To check
+is.numeric(New_df$ride_length)
+#create column for different seasons: Spring, Summer, Fall, Winter
+New_df <- New_df %>% mutate(season = 
+                                             case_when(month == "03" ~ "Spring",
+                                                       month == "04" ~ "Spring",
+                                                       month == "05" ~ "Spring",
+                                                       month == "06"  ~ "Summer",
+                                                       month == "07"  ~ "Summer",
+                                                       month == "08"  ~ "Summer",
+                                                       month == "09" ~ "Fall",
+                                                       month == "10" ~ "Fall",
+                                                       month == "11" ~ "Fall",
+                                                       month == "12" ~ "Winter",
+                                                       month == "01" ~ "Winter",
+                                                       month == "02" ~ "Winter")
+)
+
+#create column for different time_of_day: Night, Morning, Afternoon, Evening
+New_df <- New_df %>% mutate(time_of_day = 
+                                             case_when(hour == "0" ~ "Night",
+                                                       hour == "1" ~ "Night",
+                                                       hour == "2" ~ "Night",
+                                                       hour == "3" ~ "Night",
+                                                       hour == "4" ~ "Night",
+                                                       hour == "5" ~ "Night",
+                                                       hour == "6" ~ "Morning",
+                                                       hour == "7" ~ "Morning",
+                                                       hour == "8" ~ "Morning",
+                                                       hour == "9" ~ "Morning",
+                                                       hour == "10" ~ "Morning",
+                                                       hour == "11" ~ "Morning",
+                                                       hour == "12" ~ "Afternoon",
+                                                       hour == "13" ~ "Afternoon",
+                                                       hour == "14" ~ "Afternoon",
+                                                       hour == "15" ~ "Afternoon",
+                                                       hour == "16" ~ "Afternoon",
+                                                       hour == "17" ~ "Afternoon",
+                                                       hour == "18" ~ "Evening",
+                                                       hour == "19" ~ "Evening",
+                                                       hour == "20" ~ "Evening",
+                                                       hour == "21" ~ "Evening",
+                                                       hour == "22" ~ "Evening",
+                                                       hour == "23" ~ "Evening"))
+
+
+#create a column for the month using the full month name
+New_df <- New_df %>% mutate(month = 
+                                             case_when(month == "01" ~ "January",
+                                                       month == "02" ~ "February",
+                                                       month == "03" ~ "March",
+                                                       month == "04" ~ "April",
+                                                       month == "05" ~ "May",
+                                                       month == "06" ~ "June",
+                                                       month == "07" ~ "July",
+                                                       month == "08" ~ "August",
+                                                       month == "09" ~ "September",
+                                                       month == "10" ~ "October",
+                                                       month == "11" ~ "November",
+                                                       month == "12" ~ "December"
+                                             )
+)
+
+#More Cleaning
+New_df <- na.omit(New_df) #remove rows with NA values
+New_df <- distinct(New_df) #remove duplicate rows 
+New_df <- New_df[!(New_df$ride_length <=0),] #remove where ride_length is 0 or negative
+
+#View Final clean dataset
+View(New_df)
+
+#Export Data for furter analysis "NOTE: \\ must be used to avoid HEX Code error"
+write.csv(New_df,"C:\\Users\\asd00\\Documents\\Project\\Refined_data_v1.csv", row.names = TRUE)
+
+
+##### Analysis 
+
+mean(New_df$ride_length) #straight average (total ride length / rides)
+
+median(New_df$ride_length) #midpoint number in the ascending array of ride lengths
+
+max(New_df$ride_length) #longest ride
+
+min(New_df$ride_length) #shortest ride
+
+#You can condense the four lines above to one line using summary() on the specific attribute
+
+summary(New_df$ride_length)
+
+#Compare members and casual users
+
+aggregate(New_df$ride_length ~ New_df$member_casual, FUN = mean)
+aggregate(New_df$ride_length ~ New_df$member_casual, FUN = median)
+aggregate(New_df$ride_length ~ New_df$member_casual, FUN = max)
+aggregate(New_df$ride_length ~ New_df$member_casual, FUN = min)
+
+
+#See the average ride time by each day for members vs casual users
+
+New_df$day_of_week <- ordered(New_df$day_of_week, levels=c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"))
+aggregate(New_df$ride_length ~ New_df$member_casual + New_df$day_of_week, FUN = mean)
+
+#-----PLOTTING -----
+
+#Analyze and plotting ridership data by type per weekday
+
+New_df %>% 
+  mutate(weekday = wday(started_at, label = TRUE)) %>%  #creates weekday field using wday()
+  group_by(member_casual, weekday) %>%  #groups by usertype and weekday
+  summarise(number_of_rides = n()                            #calculates the number of rides and average duration
+            ,average_duration = mean(ride_length)) %>%        #calculates the average duration
+  arrange(member_casual, weekday) %>% 
+  ggplot(aes(x = weekday, y = number_of_rides, fill = member_casual)) +
+  geom_col(position = "dodge") + labs(fill='Rider Group') +
+  ggtitle(label = 'Total Rides Per day', subtitle = 'Casual Riders vs Members') + 
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(plot.subtitle = element_text(hjust = 0.5)) +
+  xlab('Weekdays') + ylab('Number of Rides') +
+  geom_text(aes(label = number_of_rides, hjust = "right"), position = position_dodge(width = 0.9),size = 3, angle = 90)
+
+
+#Rides per month by member/casual
+New_df$month <- ordered(New_df$month, levels=c("July", "August", "September", "October", "November", "December", "January", "February", "March", "April", "May", "June")) #rearrange months to January -> December 
+New_df %>% 
+  group_by(member_casual, month) %>% 
+  summarise(number_of_rides = n()) %>% 
+  arrange(member_casual, month)  %>% 
+  ggplot(aes(x = month, 
+             y = number_of_rides, 
+             fill = member_casual)) + 
+  labs(fill='Rider Group') +
+  geom_col(position = "dodge") +
+  ggtitle(label = 'Total Rides Per Month', subtitle = 'Casual Riders vs Members') + 
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(plot.subtitle = element_text(hjust = 0.5)) +
+  theme(axis.text.x = element_text(angle = 45)) +
+  xlab('Month') + ylab('Number of Rides') +
+  geom_text(aes(label = number_of_rides, hjust = "left"), position = position_dodge(width = 0.9),size = 3, angle = 90)
+
+
+#Total rides per year by member/casual
+New_df %>% 
+  group_by(member_casual) %>% 
+  summarise(number_of_rides = n()) %>%
+  arrange(member_casual)  %>% 
+  ggplot(aes(x = member_casual, 
+             y = number_of_rides, 
+             fill = member_casual)) + 
+  labs(fill='Rider Group') +
+  geom_col(position = "dodge") +
+  ggtitle(label = 'Total Rides Per Year', subtitle = 'Casual Riders vs Members') + 
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(plot.subtitle = element_text(hjust = 0.5)) +
+  xlab('Rider Group') + ylab('Number of Rides') +
+  geom_text(aes(label = number_of_rides), vjust = 0)
+
+#Average trip duration by member/casual
+New_df %>% 
+  group_by(member_casual) %>% 
+  summarise(average_duration = mean( ride_length)) %>% 
+  arrange(member_casual)  %>% 
+  ggplot(aes(x = member_casual, 
+             y = average_duration, 
+             fill = member_casual)) +
+  labs(fill='Rider Group') +
+  geom_col(position = "dodge") +
+  ggtitle(label = 'Average Trip Duration', subtitle = 'Casual Riders vs Members') + 
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(plot.subtitle = element_text(hjust = 0.5)) +
+  xlab('Rider Group') + ylab('Trip Duration in Minutes') +
+  geom_text(aes(label = round(average_duration, digits = 2)), vjust = 0)
+
+#Average trip duration per month by member/casual
+New_df %>% 
+  group_by(member_casual, month) %>% 
+  summarise(average_duration = mean(ride_length)) %>% 
+  arrange(member_casual, month)  %>% 
+  ggplot(aes(x = month, 
+             y = average_duration, 
+             fill = member_casual)) +
+  labs(fill='Rider Group') +
+  geom_col(position = "dodge") +
+  ggtitle(label = 'Average Trip Duration by Month', subtitle = 'Casual Riders vs Members') + 
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(plot.subtitle = element_text(hjust = 0.5)) +
+  theme(axis.text.x = element_text(angle = 45)) +
+  xlab('Month') + ylab('Trip Duration in Minutes') +
+  geom_text(aes(label = round(average_duration, digits = 2), hjust = "right"), position = position_dodge(width = 0.9),size = 3, angle = 90)
+
+#Average trip duration per weekday by member/casual
+New_df %>% 
+  group_by(member_casual, weekday) %>% 
+  summarise(average_duration = mean(ride_length)) %>% 
+  arrange(member_casual, weekday)  %>% 
+  ggplot(aes(x = weekday, 
+             y = average_duration, 
+             fill = member_casual)) +
+  labs(fill='Rider Group') +
+  geom_col(position = "dodge") +
+  ggtitle(label = 'Average Trip Duration by Weekday', subtitle = 'Casual Riders vs Members') + 
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(plot.subtitle = element_text(hjust = 0.5)) +
+  xlab('Day of Week') + ylab('Trip Duration in Minutes') +
+  geom_text(aes(label = round(average_duration, digits = 2), hjust = "right"), position = position_dodge(width = 0.9),size = 3, angle = 90)
+
+#Bike Preference per Rider Group
+New_df %>% 
+  group_by(member_casual, rideable_type) %>% 
+  summarise(number_of_rides = n()) %>%
+  arrange(member_casual, rideable_type)  %>% 
+  ggplot(aes(x = rideable_type, 
+             y = number_of_rides, 
+             fill = member_casual)) + 
+  labs(fill='Rider Group') +
+  geom_col(position = "dodge") +
+  ggtitle(label = 'Total Rides per Year by Bike Type', subtitle = 'Casual Riders vs Members') +  
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(plot.subtitle = element_text(hjust = 0.5)) +
+  xlab('Bike Type') + ylab('Number of Rides') +
+  geom_text(aes(label = number_of_rides), position = position_dodge(width = 0.9), vjust = 0)
+
+
+
+#Average trip duration per bike type
+New_df %>% 
+  group_by(member_casual, rideable_type) %>% 
+  summarise(average_duration = mean(ride_length)) %>% 
+  arrange(member_casual, rideable_type)  %>% 
+  ggplot(aes(x = rideable_type, 
+             y = average_duration, 
+             fill = member_casual)) +
+  labs(fill='Rider Group') +
+  geom_col(position = "dodge") +
+  ggtitle(label = 'Average Trip Duration by Bike Type', subtitle = 'Casual Riders vs Members') + 
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(plot.subtitle = element_text(hjust = 0.5)) +
+  xlab('Bike Type') + ylab('Trip Duration in Minutes') +
+  geom_text(aes(label = round(average_duration, digits = 2)), position = position_dodge(width = 0.9), vjust = 0)
