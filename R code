@@ -226,7 +226,7 @@ New_df %>%
   theme(plot.title = element_text(hjust = 0.5)) +
   theme(plot.subtitle = element_text(hjust = 0.5)) +
   theme(axis.text.x = element_text(angle = 45)) +
-  xlab('Month') + ylab('Number of Rides') +
+  xlab('Month') + ylab('Number of Rides') + 
   geom_text(aes(label = number_of_rides, hjust = "left"), position = position_dodge(width = 0.9),size = 3, angle = 90)
 
 
@@ -280,11 +280,11 @@ New_df %>%
   geom_text(aes(label = round(average_duration, digits = 2), hjust = "right"), position = position_dodge(width = 0.9),size = 3, angle = 90)
 
 #Average trip duration per weekday by member/casual
-New_df %>% 
-  group_by(member_casual, weekday) %>% 
+New_df$day_of_week <- ordered(New_df$day_of_week, levels=c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"))
+New_df %>%group_by(member_casual, day_of_week) %>% 
   summarise(average_duration = mean(ride_length)) %>% 
-  arrange(member_casual, weekday)  %>% 
-  ggplot(aes(x = weekday, 
+  arrange(member_casual, day_of_week)  %>% 
+  ggplot(aes(x = day_of_week, 
              y = average_duration, 
              fill = member_casual)) +
   labs(fill='Rider Group') +
@@ -292,6 +292,7 @@ New_df %>%
   ggtitle(label = 'Average Trip Duration by Weekday', subtitle = 'Casual Riders vs Members') + 
   theme(plot.title = element_text(hjust = 0.5)) +
   theme(plot.subtitle = element_text(hjust = 0.5)) +
+  theme(axis.text.x = element_text(angle = 45)) +
   xlab('Day of Week') + ylab('Trip Duration in Minutes') +
   geom_text(aes(label = round(average_duration, digits = 2), hjust = "right"), position = position_dodge(width = 0.9),size = 3, angle = 90)
 
