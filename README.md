@@ -1,3 +1,10 @@
+
+    👋 Hi, I’m Ashutosh Pathak
+    👀 I’m interested in R & Python
+    🌱 I’m currently learning Data Science and Analytics
+    📫 How to reach me ... you can reach me on ashutosh.pathak00@gmail.com
+
+
 ## Introduction
 
 Welcome to the Cyclistic bike-share analysis case study! In this case study, we will perform many real-world tasks of a junior data analyst. We will work for a fictional company, Cyclistic, and meet different characters and team members.In order to answer the key business questions, We will follow the steps of the data analysis process: ask, prepare, process, analyze,share, and act.
