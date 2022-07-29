@@ -197,12 +197,11 @@ aggregate(New_df$ride_length ~ New_df$member_casual + New_df$day_of_week, FUN = 
 #Analyze and plotting ridership data by type per weekday
 
 New_df %>% 
-  mutate(weekday = wday(started_at, label = TRUE)) %>%  #creates weekday field using wday()
-  group_by(member_casual, weekday) %>%  #groups by usertype and weekday
-  summarise(number_of_rides = n()                            #calculates the number of rides and average duration
-            ,average_duration = mean(ride_length)) %>%        #calculates the average duration
-  arrange(member_casual, weekday) %>% 
-  ggplot(aes(x = weekday, y = number_of_rides, fill = member_casual)) +
+  mutate(day_of_week = lubridate::wday(started_at, label = TRUE)) %>%
+  group_by(member_casual, day_of_week) %>%  
+  summarise(number_of_rides = n(), average_duration = mean(ride_length)) %>% 
+  arrange(member_casual, day_of_week) %>% 
+  ggplot(aes(x = day_of_week, y = number_of_rides, fill = member_casual)) +
   geom_col(position = "dodge") + labs(fill='Rider Group') +
   ggtitle(label = 'Total Rides Per day', subtitle = 'Casual Riders vs Members') + 
   theme(plot.title = element_text(hjust = 0.5)) +
